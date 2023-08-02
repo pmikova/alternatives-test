@@ -54,6 +54,11 @@ mkdir $LOG_PATH
 declare -A RESULTS_LOG
 RPM_DOWNLOAD_DIR="${WORKSPACE}/rpms_all_jdks"
 mkdir $RPM_DOWNLOAD_DIR
+SUITE="alternatives-test"
+TMPRESULTS=$SCRATCH_DISK/$SUITE/results
+rm -rf $SCRATCH_DISK/$SUITE
+mkdir $SCRATCH_DISK/$SUITE
+mkdir $TMPRESULTS
 
 pushd $WORKSPACE
 git clone https://github.com/rh-openjdk/run-folder-as-tests.git
@@ -283,7 +288,6 @@ for selected_java in $JDK_LIST
 
 #TODO LATER processing of the results for the xml plugin
 tmpXmlBodyFile=$(mktemp)
-SUITE="alternatives-test"
 
 for logname in "${!RESULTS_LOG[@]}"; 
   do 
