@@ -40,7 +40,7 @@ WORKSPACE=/mnt/workspace
 fi
 # ${TEST_RPM_DIR} should be set by user. If not, lets use some default.
 if [[ -z "${TEST_RPM_DIR}" ]]; then
-WORKSPACE=/mnt/workspace/rpms
+TEST_RPM_DIR=/mnt/workspace/rpms
 fi
 
 PASSED_TESTS=0
@@ -57,10 +57,10 @@ LOG_PATH="${SCRATCH_DISK}/alternatives-test-logs"
 rm -rf $LOG_PATH
 mkdir $LOG_PATH
 declare -A RESULTS_LOG
-RPM_DOWNLOAD_DIR="${WORKSPACE}/rpms_all_jdks"
+RPM_DOWNLOAD_DIR="${WORKSPACE}/rpms_all_jdks/"
 mkdir $RPM_DOWNLOAD_DIR
 SUITE="alternatives-test"
-TMPRESULTS=$SCRATCH_DISK/$SUITE/results
+TMPRESULTS="${SCRATCH_DISK}/${SUITE}/results"
 rm -rf $SCRATCH_DISK/$SUITE
 mkdir $SCRATCH_DISK/$SUITE
 mkdir $TMPRESULTS
@@ -185,7 +185,7 @@ sudo bash ${PURGE_SCRIPT}
 
 #install all java (8,11,17,latest)
 #TODO add java-latest-openjdk (currently does not work because our vms dont use epel)
-sudo dnf install -y "${RPM_DOWNLOAD_DIR}/*"
+sudo dnf install -y "${RPM_DOWNLOAD_DIR}*"
 
 #-------------- Check if the status is automatic in the newly installed rpms
 isAutomatic "java"
@@ -242,7 +242,7 @@ sudo bash ${PURGE_SCRIPT}
 JDK_LIST="java-17-openjdk java-1.8.0-openjdk java-11-openjdk"
 for selected_java in $JDK_LIST
  do
-  sudo dnf install -y /mnt/workspace/rpms_all_jdks/*
+  sudo dnf install -y "${RPM_DOWNLOAD_DIR}*"
   #TODO LATER figure out how to properly resolve latest path
   # get latest version from rpm 
   # rpm -q --whatprovides java-latest-openjdk  
