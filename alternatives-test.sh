@@ -38,6 +38,11 @@ fi
 if [[ -z "${WORKSPACE}" ]]; then
 WORKSPACE=/mnt/workspace
 fi
+# ${TEST_RPM_DIR} should be set by user. If not, lets use some default.
+if [[ -z "${TEST_RPM_DIR}" ]]; then
+WORKSPACE=/mnt/workspace/rpms
+fi
+
 PASSED_TESTS=0
 FAILED_TESTS=0
 SKIPPED_TESTS=0
@@ -138,7 +143,7 @@ sudo bash ${PURGE_SCRIPT}
 
 #-------------- Install current released version of the tested packages and upgrade
 sudo dnf install -y java-${VER}-openjdk-devel* java-${VER}-openjdk-headless* java-${VER}-openjdk-javadoc*
-sudo dnf update -y /mnt/ramdisk/rpms/*
+sudo dnf update -y "${TEST_RPM_DIR}/*"
 
 #-------------- Test that for tested jdk, release is selected by default on all masters after upgrade
 for masterX in $MASTERS_ALL 
@@ -188,7 +193,7 @@ isAutomatic "javac"
 
 #TODO verify the masters are still correctly following priority
 #-------------- Check that system JDK is selected in case of automatic alternatives after update
-sudo dnf update -y /mnt/ramdisk/rpms/*
+sudo dnf update -y "${TEST_RPM_DIR}/*"
 if isAutomatic ; then
   if [[ $OTOOL_OS_NAME == "el" ]] ; then
     if [[ $OTOOL_OS_VERSION -eq "7" ]] ; then
@@ -254,7 +259,7 @@ for selected_java in $JDK_LIST
   #sudo alternatives --set java $JDK_ABSOLUTE_PATH"/bin/java"
   sudo alternatives --set javac $JDK_ABSOLUTE_PATH"/bin/javac"  
   ##------------- Test that the JDK alternatives manual setup persisted for all masters after the update
-  sudo dnf update -y /mnt/ramdisk/rpms/*
+  sudo dnf update -y "${TEST_RPM_DIR}/*"
   JDK_MASTERS_IT="java javac"
   for java_master in $JDK_MASTERS_IT 
    do
@@ -271,7 +276,7 @@ for selected_java in $JDK_LIST
     fi
     echo "Next check if the expected master is selected."
     ###------------- Test that the correct master is selected after the update
-    LOGNAME=$LOG_PATH"/"${java_master}"_persisted_for_${selected_java}_selected_after_update.log"
+    LOGNAME=${java_master}"_persisted_for_${selected_java}_selected_after_update.log"
     LOG_FILE=$LOG_PATH"/"$LOGNAME
     touch $LOG_FILE
     alternatives --display $java_master | grep "link currently points to $JDK_ABSOLUTE_PATH" 
