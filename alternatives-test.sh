@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# $SCRATCH_DISK is recomended to set for various garbage operations (preset to /mnt/ramdisk)
 # $PREP_SCRIPT is script, which can be run to prepare tested product. Defaults to cleanAndInstallRpms
 # $PURGE_SCRIPT is script, which can be run to uninstall all JDK from the systemíá
 
@@ -30,10 +29,6 @@ fi
 if [[ x${PURGE_SCRIPT} == x ]]; then
   PURGE_SCRIPT="/mnt/shared/TckScripts/jenkins/benchmarks/uninstallRpms.sh"
 fi
-# ${SCRATCH_DISK} should be set by user. If not, lets use some default.
-if [[ x${SCRATCH_DISK} == x ]]; then
-  SCRATCH_DISK=/mnt/ramdisk
-fi
 # setup workspace
 if [[ -z "${WORKSPACE}" ]]; then
 WORKSPACE=/mnt/workspace
@@ -53,16 +48,15 @@ MASTERS_JAVAC="javac"
 MASTERS_SDK="java_sdk_$VER java_sdk_openjdk java_sdk_${VER}_openjdk"
 MASTERS_JAVADOC="javadocdir javadoczip"
 MASTERS_ALL="${MASTERS_JRE} ${MASTERS_JAVA} ${MASTERS_SDK} ${MASTERS_JAVAC} ${MASTERS_JAVADOC}"
-LOG_PATH="${SCRATCH_DISK}/alternatives-test-logs"
+LOG_PATH="${WORKSPACE}/alternatives-test-logs"
 rm -rf $LOG_PATH
 mkdir $LOG_PATH
 declare -A RESULTS_LOG
 RPM_DOWNLOAD_DIR="${WORKSPACE}/rpms_all_jdks/"
 mkdir $RPM_DOWNLOAD_DIR
 SUITE="alternatives-test"
-TMPRESULTS="${SCRATCH_DISK}/${SUITE}/results"
-rm -rf $SCRATCH_DISK/$SUITE
-mkdir $SCRATCH_DISK/$SUITE
+TMPRESULTS="${WORKSPACE}/${SUITE}-results"
+rm -rf $TMPRESULTS
 mkdir $TMPRESULTS
 
 pushd $WORKSPACE
