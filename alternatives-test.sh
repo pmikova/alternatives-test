@@ -55,9 +55,6 @@ declare -A RESULTS_LOG
 RPM_DOWNLOAD_DIR="${WORKSPACE}/rpms_all_jdks/"
 mkdir $RPM_DOWNLOAD_DIR
 SUITE="alternatives-test"
-TMPRESULTS="${WORKSPACE}/${SUITE}-results"
-rm -rf $TMPRESULTS
-mkdir $TMPRESULTS
 
 pushd $WORKSPACE
 git clone https://github.com/rh-openjdk/run-folder-as-tests.git
@@ -301,7 +298,7 @@ for logname in "${!RESULTS_LOG[@]}";
   ALL_TESTS=$(($ALL_TESTS + 1))
 done
 
-printXmlHeader $PASSED_TESTS $FAILED_TESTS $ALL_TESTS $SKIPPED_TESTS $SUITE >  $TMPRESULTS/$SUITE.jtr.xml
+printXmlHeader $PASSED_TESTS $FAILED_TESTS $ALL_TESTS $SKIPPED_TESTS $SUITE >  $LOG_PATH/$SUITE.jtr.xml
 cat $tmpXmlBodyFile >>  $LOG_PATH/$SUITE.jtr.xml
 printXmlFooter >>  $LOG_PATH/$SUITE.jtr.xml
 rm $tmpXmlBodyFile
