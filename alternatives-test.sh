@@ -35,7 +35,7 @@ WORKSPACE=/mnt/workspace
 fi
 # ${TEST_RPM_DIR} should be set by user. If not, lets use some default.
 if [[ -z "${TEST_RPM_DIR}" ]]; then
-TEST_RPM_DIR=/mnt/workspace/rpms
+TEST_RPM_DIR=${WORKSPACE}/rpms
 fi
 
 PASSED_TESTS=0
@@ -119,12 +119,10 @@ for masterM in $MASTERS_ALL
     LOGNAME=$masterM"_exists_after_install.log"
     LOG_FILE=$LOG_PATH"/"$LOGNAME
     touch $LOG_FILE
-    alternatives --display $masterM  
+    alternatives --display $masterM  >> $LOG_FILE 2>&1
     if [ $? -eq 0 ] ; then 
-      echo "PASS: master ${masterM} exists and works" >> $LOG_FILE
       RESULTS_LOG[$LOGNAME]=0
     else
-      echo "FAIL: master ${masterM} not found!" >> $LOG_FILE
       RESULTS_LOG[$LOGNAME]=1
     fi
   done
@@ -134,7 +132,7 @@ sudo bash ${PURGE_SCRIPT}
 
 #-------------- Install current released version of the tested packages and upgrade
 sudo dnf install -y java-${VER}-openjdk-devel* java-${VER}-openjdk-headless* java-${VER}-openjdk-javadoc*
-sudo dnf update -y "${TEST_RPM_DIR}/*"
+sudo dnf update -y ${TEST_RPM_DIR}/*
 
 #-------------- Test that for tested jdk, release is selected by default on all masters after upgrade
 for masterX in $MASTERS_ALL 
@@ -142,7 +140,8 @@ for masterX in $MASTERS_ALL
     LOGNAME=$masterX"_has_release_selected_by_default_after_upgrade.log"
     LOG_FILE=$LOG_PATH"/"$LOGNAME
     touch $LOG_FILE
-    SELECTED_JDK=$(alternatives --display $masterX | grep "link currently points to" | awk '{print $NF}')
+    alternatives --display $masterx >> $LOG_FILE 2>&1
+    SELECTED_JDK=$( cat $LOG_FILE | grep "link currently points to" | awk '{print $NF}' )
     if [[ "fastdebug" == *$SELECTED_JDK* ]]; then
      echo "FAIL: Fastdebug jdk is selected by default for ${masterX} even though release is present. This is most likely a priority issue." >> $LOG_FILE
      RESULTS_LOG[$LOGNAME]=1
@@ -161,7 +160,7 @@ for masterM in $MASTERS_ALL
     LOGNAME=$masterM"_exists_after_update.log"
     LOG_FILE=$LOG_PATH"/"$LOGNAME
     touch $LOG_FILE
-    alternatives --display $masterM  
+    alternatives --display $masterM >> $LOG_FILE 2>&1
     if [ $? -eq 0 ] ; then 
       echo "PASS: master ${masterM} exists and works" >> $LOG_FILE
       RESULTS_LOG[$LOGNAME]=0
@@ -176,7 +175,7 @@ sudo bash ${PURGE_SCRIPT}
 
 #install all java (8,11,17,latest)
 #TODO add java-latest-openjdk (currently does not work because our vms dont use epel)
-sudo dnf install -y "${RPM_DOWNLOAD_DIR}*"
+sudo dnf install -y ${RPM_DOWNLOAD_DIR}/*
 
 #-------------- Check if the status is automatic in the newly installed rpms
 isAutomatic "java"
@@ -184,7 +183,7 @@ isAutomatic "javac"
 
 #TODO verify the masters are still correctly following priority
 #-------------- Check that system JDK is selected in case of automatic alternatives after update
-sudo dnf update -y "${TEST_RPM_DIR}/*"
+sudo dnf update -y ${TEST_RPM_DIR}/*
 if isAutomatic ; then
   if [[ $OTOOL_OS_NAME == "el" ]] ; then
     if [[ $OTOOL_OS_VERSION -eq "7" ]] ; then
@@ -212,7 +211,8 @@ if isAutomatic ; then
     LOGNAME=$auto_master"_follows_system_jdk_priority.log"
     LOG_FILE=$LOG_PATH"/"$LOGNAME
     touch $LOG_FILE
-    alternatives --display $auto_master | grep "link currently" | grep "{$VER}"
+    alternatives --display $auto_master >> $LOG_FILE 2>&1
+    cat $LOG_FILE | grep "link currently" | grep "{$VER}" 
     if [ $? -eq 0 ] ; then
        echo "PASS: The alternatives point to system JDK." >> $LOG_FILE
        RESULTS_LOG[$LOGNAME]=0
@@ -233,7 +233,7 @@ sudo bash ${PURGE_SCRIPT}
 JDK_LIST="java-17-openjdk java-1.8.0-openjdk java-11-openjdk"
 for selected_java in $JDK_LIST
  do
-  sudo dnf install -y "${RPM_DOWNLOAD_DIR}*"
+  sudo dnf install -y ${RPM_DOWNLOAD_DIR}*
   #TODO LATER figure out how to properly resolve latest path
   # get latest version from rpm 
   # rpm -q --whatprovides java-latest-openjdk  
@@ -250,7 +250,7 @@ for selected_java in $JDK_LIST
   #sudo alternatives --set java $JDK_ABSOLUTE_PATH"/bin/java"
   sudo alternatives --set javac $JDK_ABSOLUTE_PATH"/bin/javac"  
   ##------------- Test that the JDK alternatives manual setup persisted for all masters after the update
-  sudo dnf update -y "${TEST_RPM_DIR}/*"
+  sudo dnf update -y ${TEST_RPM_DIR}/*
   JDK_MASTERS_IT="java javac"
   for java_master in $JDK_MASTERS_IT 
    do
@@ -258,11 +258,11 @@ for selected_java in $JDK_LIST
     LOG_FILE=$LOG_PATH"/"$LOGNAME
     touch $LOG_FILE
     if isAutomatic $java_master ; then
-      echo "FAIL: Master $java_master is in automatic mode, even though it should be in manual. Failed test." >> $LOG_FILE
+      echo "FAIL: Master $java_master is in automatic mode after update, even though it should be in manual. Failed test." >> $LOG_FILE
       RESULTS_LOG[$LOGNAME]=1
       continue
     else
-      echo "PASS: Master $java_master is in manual mode, that is correct. Continuing the checks."  >> $LOG_FILE
+      echo "PASS: Master $java_master is in manual mode after update, that is correct. Continuing the checks."  >> $LOG_FILE
       RESULTS_LOG[$LOGNAME]=0
     fi
     echo "Next check if the expected master is selected."
@@ -270,7 +270,8 @@ for selected_java in $JDK_LIST
     LOGNAME=${java_master}"_persisted_for_${selected_java}_selected_after_update.log"
     LOG_FILE=$LOG_PATH"/"$LOGNAME
     touch $LOG_FILE
-    alternatives --display $java_master | grep "link currently points to $JDK_ABSOLUTE_PATH" 
+    alternatives --display $java_master  >> $LOG_FILE 2>&1
+    cat $LOG_FILE | grep "link currently points to $JDK_ABSOLUTE_PATH"
     if $? ; then 
       echo "PASS: The link points to the correct jdk after the update."  >> $LOG_FILE
       RESULTS_LOG[$LOGNAME]=0
@@ -288,12 +289,13 @@ tmpXmlBodyFile=$(mktemp)
 for logname in "${!RESULTS_LOG[@]}"; 
   do 
   LOCAL_RESULT=${RESULTS_LOG[$logname]}
+  LOG_DEST=$LOG_PATH"/"$logname
   if [ $LOCAL_RESULT -eq 0 ] ; then
     PASSED_TESTS=$(($PASSED_TESTS + 1))
     printXmlTest "$SUITE.test" $logname "0.01" >> $tmpXmlBodyFile
   else
     FAILED_TESTS=$(($FAILED_TESTS + 1))
-    printXmlTest "$SUITE.test" "$logname" "0.01" >> $tmpXmlBodyFile
+    printXmlTest "$SUITE.test" $logname "0.01" "$LOG_DEST" "$LOG_DEST" >> $tmpXmlBodyFile
   fi
   ALL_TESTS=$(($ALL_TESTS + 1))
 done
@@ -306,6 +308,11 @@ pushd $LOG_PATH
   tar -czf  $SUITE.tar.gz $SUITE.jtr.xml
 popd
 
+if [ $FAILED_TESTS -eq 0 ] ; then
+  exit 0
+else 
+  exit 95
+fi
 
 
 
