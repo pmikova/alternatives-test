@@ -59,7 +59,13 @@ SUITE="alternatives-test"
 pushd $WORKSPACE
 git clone https://github.com/rh-openjdk/run-folder-as-tests.git
 source $WORKSPACE"/run-folder-as-tests/jtreg-shell-xml.sh"
-sudo dnf download --downloaddir="${RPM_DOWNLOAD_DIR}" -y  java-11-openjdk-devel* java-11-openjdk-headless* java-11-openjdk-javadoc* java-17-openjdk-devel* java-17-openjdk-headless* java-17-openjdk-javadoc* java-1.8.0-openjdk-devel* java-1.8.0-openjdk-headless* java-1.8.0-openjdk-javadoc*
+# ---- prepare previous released rpms into a folder for update testing purposes
+bash ${PREP_SCRIPT}
+sudo dnf downgrade --downloadonly --downloaddir="${RPM_DOWNLOAD_DIR}" -y  java-11-openjdk-devel* java-11-openjdk-headless* java-11-openjdk-javadoc* java-17-openjdk-devel* java-17-openjdk-headless* java-17-openjdk-javadoc* java-1.8.0-openjdk-devel* java-1.8.0-openjdk-headless* java-1.8.0-openjdk-javadoc*
+if [ $? -ne 0 ] ; then 
+  SKIP_UPDATE=true
+fi
+bash ${PURGE_SCRIPT}
 
 #-------------- Function to run on master, which returns 0 if master status is automatic, 1 it is manual
 function isAutomatic() {
