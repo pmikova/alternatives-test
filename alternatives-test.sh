@@ -100,7 +100,7 @@ for masterX in $MASTERS_ALL
   LOGNAME=$masterX"_has_release_selected_by_default_after_install.log"
   LOG_FILE=$LOG_PATH"/"$LOGNAME
   touch $LOG_FILE
-  SELECTED_JDK=$(alternatives --display $masterX | grep "link currently points to" | awk '{print $NF}')
+  SELECTED_JDK=$(alternatives --display ${masterX} | grep "link currently points to" | awk '{print $NF}')
   if [[ "fastdebug" == *$SELECTED_JDK* ]]; then
    echo "FAIL: Fastdebug jdk is selected by default for ${masterX} even though release is present. This is most likely a priority issue." >> $LOG_FILE
    RESULTS_LOG[$LOGNAME]=1
