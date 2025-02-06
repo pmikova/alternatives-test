@@ -29,6 +29,12 @@ fi
 if [[ x${PURGE_SCRIPT} == x ]]; then
   PURGE_SCRIPT="/mnt/shared/TckScripts/jenkins/benchmarks/uninstallRpms.sh"
 fi
+if [[ x${SYSTEM_OS} == x ]]; then
+  SYSTEM_OS=${OTOOL_OS_NAME}
+fi
+if [[ x${SYSTEM_OS_VER} == x ]]; then
+  SYSTEM_OS_VER=${OTOOL_OS_VERSION}
+fi
 # setup workspace
 if [[ -z "${WORKSPACE}" ]]; then
 WORKSPACE=/mnt/workspace
@@ -237,7 +243,16 @@ sudo bash ${PURGE_SCRIPT}
 
 #-------------- Iterate over all available JDKs and test various setups----------------
 # TODO LATER add implementation for latest - java-$LATEST_VER-openjdk
-JDK_LIST="java-17-openjdk java-1.8.0-openjdk java-11-openjdk"
+if [[ ${SYSTEM_OS} == "el" ]]; then
+ if [ ${SYSTEM_OS_VER} -ge 10 ]; then
+    JDK_LIST="java-21-openjdk"
+ else
+    JDK_LIST="java-17-openjdk java-1.8.0-openjdk java-11-openjdk"
+ fi
+else
+ JDK_LIST="java-17-openjdk java-1.8.0-openjdk java-11-openjdk java-21-openjdk"
+fi
+
 for selected_java in $JDK_LIST
  do
   sudo dnf install -y ${RPM_DOWNLOAD_DIR}*
